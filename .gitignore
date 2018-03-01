@@ -1,0 +1,7 @@
+*.pyc
+.idea/
+virtualenv/
+temp/
+.coverage
+cover/
+clientlib.egg-info/
