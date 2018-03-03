@@ -3,7 +3,8 @@ from clientlib.functions import Function
 
 class Endpoint(object):
     def __init__(self, method, endpoint, args=None, params=None, payload=None,
-                 requires_auth=True, response_schema=None):
+                 requires_auth=True, response_schema=None,
+                 payload_schema=None):
         self._method = method
         self._endpoint = endpoint
         self._args = args or []
@@ -11,6 +12,7 @@ class Endpoint(object):
         self._payload = payload
         self._requires_auth = requires_auth
         self._response_schema = response_schema
+        self._payload_schema = payload_schema
 
         self._function = None
 
@@ -31,7 +33,12 @@ class Endpoint(object):
         return self.execute
 
     def _create_payload(self, kwargs):
-        return kwargs[self._payload] if self._payload is not None else None
+        payload = kwargs[self._payload] if self._payload is not None else None
+
+        if payload is not None and self._payload_schema is not None:
+            payload = self._payload_schema.dump(payload).data
+
+        return payload
 
     def _create_args(self, kwargs):
         return {
@@ -49,7 +56,7 @@ class Endpoint(object):
     def _can_deserialize(self, response):
         return (
             self._response_schema is not None and
-            200 >= response.status_code < 300
+            200 <= response.status_code < 300
         )
 
     def execute(self, **kwargs):
