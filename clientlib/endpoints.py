@@ -3,13 +3,14 @@ from clientlib.functions import Function
 
 class Endpoint(object):
     def __init__(self, method, endpoint, args=None, params=None, payload=None,
-                 requires_auth=True):
+                 requires_auth=True, response_schema=None):
         self._method = method
         self._endpoint = endpoint
         self._args = args or []
         self._params = params or []
         self._payload = payload
         self._requires_auth = requires_auth
+        self._response_schema = response_schema
 
         self._function = None
 
@@ -45,13 +46,24 @@ class Endpoint(object):
             if param in kwargs
         }
 
+    def _can_deserialize(self, response):
+        return (
+            self._response_schema is not None and
+            200 >= response.status_code < 300
+        )
+
     def execute(self, **kwargs):
         args = self._create_args(kwargs)
         params = self._create_params(kwargs)
         payload = self._create_payload(kwargs)
 
-        return self._function.execute(
+        response = self._function.execute(
             args=args,
             params=params,
             json=payload
         )
+
+        if self._can_deserialize(response):
+            return self._response_schema.load(response.json)
+        else:
+            return response
