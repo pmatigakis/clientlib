@@ -1,4 +1,8 @@
+from marshmallow.exceptions import ValidationError
+
 from clientlib.functions import Function
+from clientlib.exceptions import ExecutionError, ResponseDeserializationError
+from clientlib.models import EndpointResponse
 
 
 class Endpoint(object):
@@ -53,11 +57,42 @@ class Endpoint(object):
             if param in kwargs
         }
 
-    def _can_deserialize(self, response):
-        return (
-            self._response_schema is not None and
-            200 <= response.status_code < 300
+    def _can_deserialize(self):
+        return self._response_schema is not None
+
+    def _deserialize_response(self, response):
+        if not (200 <= response.status_code < 300):
+            raise ExecutionError(
+                reason="the request was not executed successfully",
+                response=response
+            )
+
+        try:
+            deserialized_response = self._response_schema.load(response.json)
+        except ValidationError as e:
+            raise ResponseDeserializationError(
+                reason="failed to deserialize endpoint response",
+                response=response,
+                errors=e.messages
+            )
+
+        if deserialized_response.errors:
+            raise ResponseDeserializationError(
+                reason="errors exist in deserialized endpoint response",
+                response=response,
+                errors=deserialized_response.errors
+            )
+
+        return EndpointResponse(
+            response=response,
+            data=deserialized_response.data
         )
+
+    def _create_endpoint_response(self, response):
+        if self._can_deserialize():
+            return self._deserialize_response(response)
+        else:
+            return response
 
     def execute(self, **kwargs):
         args = self._create_args(kwargs)
@@ -70,7 +105,4 @@ class Endpoint(object):
             json=payload
         )
 
-        if self._can_deserialize(response):
-            return self._response_schema.load(response.json)
-        else:
-            return response
+        return self._create_endpoint_response(response)
