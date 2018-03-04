@@ -1,7 +1,9 @@
 from marshmallow.exceptions import ValidationError
 
 from clientlib.functions import Function
-from clientlib.exceptions import ExecutionError, ResponseDeserializationError
+from clientlib.exceptions import (
+    ExecutionError, ResponseDeserializationError, PayloadSerializationError
+)
 from clientlib.models import EndpointResponse
 
 
@@ -36,11 +38,33 @@ class Endpoint(object):
 
         return self.execute
 
+    def _can_serialize_payload(self, payload):
+        return payload is not None and self._payload_schema is not None
+
+    def _create_serialized_payload(self, payload):
+        try:
+            serialized_payload = self._payload_schema.dump(payload)
+        except ValidationError as e:
+            raise PayloadSerializationError(
+                reason="failed to serialize the endpoint payload",
+                payload=payload,
+                errors=e.messages
+            )
+
+        if serialized_payload.errors:
+            raise PayloadSerializationError(
+                reason="errors exist in the serialized endpoint payload",
+                payload=payload,
+                errors=serialized_payload.errors
+            )
+
+        return serialized_payload.data
+
     def _create_payload(self, kwargs):
         payload = kwargs[self._payload] if self._payload is not None else None
 
-        if payload is not None and self._payload_schema is not None:
-            payload = self._payload_schema.dump(payload).data
+        if self._can_serialize_payload(payload):
+            payload = self._create_serialized_payload(payload)
 
         return payload
 

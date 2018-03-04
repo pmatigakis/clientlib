@@ -6,19 +6,32 @@ class ClientlibException(Exception):
 
 
 class EndpointError(ClientlibException):
+    pass
+
+
+class EndpointResponseError(EndpointError):
     def __init__(self, reason=None, response=None, *args):
-        super(EndpointError, self).__init__(reason, response, *args)
+        super(EndpointResponseError, self).__init__(reason, response, *args)
 
         self.response = response
 
 
-class ExecutionError(EndpointError):
+class ExecutionError(EndpointResponseError):
     pass
 
 
-class ResponseDeserializationError(EndpointError):
+class ResponseDeserializationError(EndpointResponseError):
     def __init__(self, reason=None, response=None, errors=None, *args):
         super(ResponseDeserializationError, self).__init__(
             reason, response, errors, *args)
 
+        self.errors = errors
+
+
+class PayloadSerializationError(EndpointError):
+    def __init__(self, reason=None, payload=None, errors=None, *args):
+        super(PayloadSerializationError, self).__init__(
+            reason, payload, errors, *args)
+
+        self.payload = payload
         self.errors = errors
