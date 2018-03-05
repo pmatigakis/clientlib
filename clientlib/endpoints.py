@@ -1,3 +1,4 @@
+import logging
 from marshmallow.exceptions import ValidationError
 
 from clientlib.functions import Function
@@ -5,6 +6,9 @@ from clientlib.exceptions import (
     ExecutionError, ResponseDeserializationError, PayloadSerializationError
 )
 from clientlib.models import EndpointResponse
+
+
+logger = logging.getLogger(__name__)
 
 
 class Endpoint(object):
@@ -45,6 +49,8 @@ class Endpoint(object):
         try:
             serialized_payload = self._payload_schema.dump(payload)
         except ValidationError as e:
+            logger.exception("failed to serialize the endpoint payload")
+
             raise PayloadSerializationError(
                 reason="failed to serialize the endpoint payload",
                 payload=payload,
@@ -52,6 +58,8 @@ class Endpoint(object):
             )
 
         if serialized_payload.errors:
+            logger.error("errors exist in the serialized endpoint payload")
+
             raise PayloadSerializationError(
                 reason="errors exist in the serialized endpoint payload",
                 payload=payload,
@@ -94,6 +102,8 @@ class Endpoint(object):
         try:
             deserialized_response = self._response_schema.load(response.json)
         except ValidationError as e:
+            logger.exception("failed to deserialize endpoint response")
+
             raise ResponseDeserializationError(
                 reason="failed to deserialize endpoint response",
                 response=response,
@@ -101,6 +111,8 @@ class Endpoint(object):
             )
 
         if deserialized_response.errors:
+            logger.error("errors exist in deserialized endpoint response")
+
             raise ResponseDeserializationError(
                 reason="errors exist in deserialized endpoint response",
                 response=response,
