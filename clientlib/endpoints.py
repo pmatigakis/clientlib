@@ -12,9 +12,23 @@ logger = logging.getLogger(__name__)
 
 
 class Endpoint(object):
+    """Endpoint declaration class"""
+
     def __init__(self, method, endpoint, args=None, params=None, payload=None,
                  requires_auth=True, response_schema=None,
                  payload_schema=None):
+        """Create a new Endpoint object
+
+        :param str method: the http method to use
+        :param str endpoint: the endpoint
+        :param list[str] args: the endpoint address arguments
+        :param list[str] params: the endpoint url arguments
+        :param dict|object payload: the endpoint payload
+        :param boolean requires_auth: indicator flag that is used to specify
+        if the endpoint requires authentication
+        :param Schema response_schema: the expected response schema
+        :param Schema payload_schema: the payload schema
+        """
         self._method = method
         self._endpoint = endpoint
         self._args = args or []
@@ -131,6 +145,12 @@ class Endpoint(object):
             return response
 
     def execute(self, **kwargs):
+        """Execute a request to the endpoint
+
+        :param dict kwargs: the endpoint arguments. These are the items defined
+        in the args and params arguments in the constructor
+        :return: dict|EndpointResponse
+        """
         args = self._create_args(kwargs)
         params = self._create_params(kwargs)
         payload = self._create_payload(kwargs)
