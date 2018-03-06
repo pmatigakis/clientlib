@@ -23,7 +23,7 @@ class Endpoint(object):
         :param str endpoint: the endpoint
         :param list[str] args: the endpoint address arguments
         :param list[str] params: the endpoint url arguments
-        :param dict|object payload: the endpoint payload
+        :param str payload: the endpoint payload
         :param boolean requires_auth: indicator flag that is used to specify
         if the endpoint requires authentication
         :param Schema response_schema: the expected response schema
@@ -147,7 +147,7 @@ class Endpoint(object):
     def execute(self, **kwargs):
         """Execute a request to the endpoint
 
-        :param dict kwargs: the endpoint arguments. These are the items defined
+        :param kwargs: the endpoint arguments. These are the items defined
         in the args and params arguments in the constructor
         :return: dict|EndpointResponse
         """
