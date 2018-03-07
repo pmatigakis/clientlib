@@ -39,9 +39,11 @@ class Endpoint(object):
         self._payload_schema = payload_schema
 
         self._function = None
+        self._session = None
 
     def _initialize_function(self, obj):
         self._function = Function(
+            session=self._session,
             base_url=obj.base_url,
             method=self._method,
             endpoint=self._endpoint,
@@ -51,6 +53,8 @@ class Endpoint(object):
         )
 
     def __get__(self, obj, obj_type):
+        self._session = obj.session
+
         if self._function is None:
             self._initialize_function(obj)
 

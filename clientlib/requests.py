@@ -1,11 +1,12 @@
-from requests import Session, Request
+from requests import Request
 
 from clientlib.models import Response
 
 
 class APIRequest(object):
-    def __init__(self, base_url, method, endpoint, args=None, params=None,
-                 json=None, auth=None, timeout=5, verify=True):
+    def __init__(self, session, base_url, method, endpoint, args=None,
+                 params=None, json=None, auth=None, timeout=5, verify=True):
+        self.session = session
         self.base_url = base_url
         self.method = method
         self.endpoint = endpoint
@@ -28,9 +29,6 @@ class APIRequest(object):
             endpoint=self._create_endpoint()
         )
 
-    def _create_session(self):
-        return Session()
-
     def _create_request(self):
         return Request(
             method=self.method,
@@ -44,8 +42,8 @@ class APIRequest(object):
         request = self._create_request()
         prepared_request = request.prepare()
 
-        with self._create_session() as session:
-            response = session.send(
+        with self.session:
+            response = self.session.send(
                 request=prepared_request,
                 verify=self.verify,
                 timeout=self.timeout

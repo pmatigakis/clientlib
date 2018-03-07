@@ -1,3 +1,6 @@
+from requests import Session
+
+
 class Client(object):
     """Client base class"""
 
@@ -13,3 +16,5 @@ class Client(object):
         self.auth = auth
         self.timeout = timeout
         self.verify = verify
+
+        self.session = Session()

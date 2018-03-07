@@ -1,6 +1,7 @@
 from unittest import TestCase, main
 
 import responses
+from requests import Session
 
 from clientlib.requests import APIRequest
 from clientlib.models import Response
@@ -19,6 +20,7 @@ class APIRequestTests(TestCase):
         )
 
         request = APIRequest(
+            session=Session(),
             base_url="http://localhost",
             method="GET",
             endpoint="/api/v1/test"
@@ -50,6 +52,7 @@ class APIRequestTests(TestCase):
         )
 
         request = APIRequest(
+            session=Session(),
             base_url="http://localhost",
             method="GET",
             endpoint="/api/v1/test/{arg1}",
