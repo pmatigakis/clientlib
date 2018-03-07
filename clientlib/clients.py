@@ -1,7 +1,9 @@
+from abc import ABCMeta
+
 from requests import Session
 
 
-class Client(object):
+class Client(metaclass=ABCMeta):
     """Client base class"""
 
     def __init__(self, base_url, auth=None, timeout=5, verify=True):
