@@ -1,6 +1,12 @@
+import logging
+
 from requests import Request
 
 from clientlib.models import Response
+from clientlib.exceptions import InvalidResponseContentType
+
+
+logger = logging.getLogger(__name__)
 
 
 class APIRequest(object):
@@ -69,8 +75,18 @@ class APIRequest(object):
                 timeout=self.timeout
             )
 
+        try:
+            json = response.json()
+        except (ValueError, TypeError):
+            logger.exception("failed to convert response content to json")
+
+            raise InvalidResponseContentType(
+                status_code=response.status_code,
+                content=response.text
+            )
+
         return Response(
             status_code=response.status_code,
             headers=response.headers,
-            json=response.json()
+            json=json
         )

@@ -5,6 +5,7 @@ from requests import Session
 
 from clientlib.requests import APIRequest
 from clientlib.models import Response
+from clientlib.exceptions import InvalidResponseContentType
 
 
 class APIRequestTests(TestCase):
@@ -74,6 +75,28 @@ class APIRequestTests(TestCase):
                 "message": "hello world"
             }
         )
+
+    @responses.activate
+    def test_fail_with_invalid_response_content_type(self):
+        responses.add(
+            responses.GET,
+            "http://localhost/api/v1/test",
+            body="hello world",
+            status=200
+        )
+
+        request = APIRequest(
+            session=Session(),
+            base_url="http://localhost",
+            method="GET",
+            endpoint="/api/v1/test"
+        )
+
+        with self.assertRaises(InvalidResponseContentType) as e:
+            request.execute()
+
+        self.assertEqual(e.exception.status_code, 200)
+        self.assertEqual(e.exception.content, "hello world")
 
 
 if __name__ == "__main__":

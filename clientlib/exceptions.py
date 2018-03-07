@@ -35,3 +35,13 @@ class PayloadSerializationError(EndpointError):
 
         self.payload = payload
         self.errors = errors
+
+
+class InvalidResponseContentType(EndpointError):
+    def __init__(self, status_code=None, content=None):
+        super(InvalidResponseContentType, self).__init__(
+            reason="the response content is not json"
+        )
+
+        self.status_code = status_code
+        self.content = content
