@@ -2,10 +2,13 @@ from unittest import TestCase, main
 
 import responses
 from requests import Session
+from requests.exceptions import RequestException, Timeout
 
 from clientlib.requests import APIRequest
 from clientlib.models import Response
-from clientlib.exceptions import InvalidResponseContentType
+from clientlib.exceptions import (
+    InvalidResponseContentType, EndpointTimeout, EndpointRequestError
+)
 
 
 class APIRequestTests(TestCase):
@@ -97,6 +100,54 @@ class APIRequestTests(TestCase):
 
         self.assertEqual(e.exception.status_code, 200)
         self.assertEqual(e.exception.content, "hello world")
+
+    @responses.activate
+    def test_timeout_exception_raised(self):
+        responses.add(
+            responses.GET,
+            "http://localhost/api/v1/test",
+            body=Timeout(),
+        )
+
+        request = APIRequest(
+            session=Session(),
+            base_url="http://localhost",
+            method="GET",
+            endpoint="/api/v1/test"
+        )
+
+        with self.assertRaises(EndpointTimeout) as e:
+            request.execute()
+
+        self.assertEqual(
+            e.exception.reason, "a timeout occurred while executing request")
+        self.assertEqual(e.exception.base_url, "http://localhost")
+        self.assertEqual(e.exception.method, "GET")
+        self.assertEqual(e.exception.endpoint, "/api/v1/test")
+
+    @responses.activate
+    def test_request_exception_raised(self):
+        responses.add(
+            responses.GET,
+            "http://localhost/api/v1/test",
+            body=RequestException(),
+        )
+
+        request = APIRequest(
+            session=Session(),
+            base_url="http://localhost",
+            method="GET",
+            endpoint="/api/v1/test"
+        )
+
+        with self.assertRaises(EndpointRequestError) as e:
+            request.execute()
+
+        self.assertEqual(
+            e.exception.reason, "an error occurred while executing request")
+        self.assertEqual(e.exception.base_url, "http://localhost")
+        self.assertEqual(e.exception.method, "GET")
+        self.assertEqual(e.exception.endpoint, "/api/v1/test")
 
 
 if __name__ == "__main__":

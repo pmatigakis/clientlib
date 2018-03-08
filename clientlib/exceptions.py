@@ -45,3 +45,20 @@ class InvalidResponseContentType(EndpointError):
 
         self.status_code = status_code
         self.content = content
+
+
+class RequestExecutionError(EndpointError):
+    def __init__(self, reason=None, base_url=None, method=None, endpoint=None):
+        super(RequestExecutionError, self).__init__(reason)
+
+        self.base_url = base_url
+        self.method = method
+        self.endpoint = endpoint
+
+
+class EndpointTimeout(RequestExecutionError):
+    pass
+
+
+class EndpointRequestError(RequestExecutionError):
+    pass

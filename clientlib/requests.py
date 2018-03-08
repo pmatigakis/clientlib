@@ -1,9 +1,12 @@
 import logging
 
 from requests import Request
+from requests.exceptions import RequestException, Timeout
 
 from clientlib.models import Response
-from clientlib.exceptions import InvalidResponseContentType
+from clientlib.exceptions import (
+    InvalidResponseContentType, EndpointTimeout, EndpointRequestError
+)
 
 
 logger = logging.getLogger(__name__)
@@ -59,31 +62,56 @@ class APIRequest(object):
             auth=self.auth
         )
 
+    def _send_request(self):
+        request = self._create_request()
+        prepared_request = request.prepare()
+
+        with self.session:
+            return self.session.send(
+                request=prepared_request,
+                verify=self.verify,
+                timeout=self.timeout
+            )
+
+    def _extract_data(self, response):
+        try:
+            return response.json()
+        except (ValueError, TypeError) as e:
+            logger.exception("failed to convert response content to json")
+
+            raise InvalidResponseContentType(
+                status_code=response.status_code,
+                content=response.text
+            ) from e
+
     def execute(self):
         """Execute the api request
 
         :rtype: Response
         :return: the request result
         """
-        request = self._create_request()
-        prepared_request = request.prepare()
-
-        with self.session:
-            response = self.session.send(
-                request=prepared_request,
-                verify=self.verify,
-                timeout=self.timeout
-            )
-
         try:
-            json = response.json()
-        except (ValueError, TypeError):
-            logger.exception("failed to convert response content to json")
+            response = self._send_request()
+        except Timeout as e:
+            logger.error("a timeout occurred while executing request")
 
-            raise InvalidResponseContentType(
-                status_code=response.status_code,
-                content=response.text
-            )
+            raise EndpointTimeout(
+                reason="a timeout occurred while executing request",
+                base_url=self.base_url,
+                method=self.method,
+                endpoint=self.endpoint
+            ) from e
+        except RequestException as e:
+            logger.exception("an error occurred while executing request")
+
+            raise EndpointRequestError(
+                reason="an error occurred while executing request",
+                base_url=self.base_url,
+                method=self.method,
+                endpoint=self.endpoint
+            ) from e
+
+        json = self._extract_data(response)
 
         return Response(
             status_code=response.status_code,
