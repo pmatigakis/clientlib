@@ -126,7 +126,7 @@ class Endpoint(object):
                 reason="failed to deserialize endpoint response",
                 response=response,
                 errors=e.messages
-            )
+            ) from e
 
         if deserialized_response.errors:
             logger.error("errors exist in deserialized endpoint response")
