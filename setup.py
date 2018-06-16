@@ -21,15 +21,28 @@ def get_test_requirements():
     return requirements
 
 
+def get_long_description():
+    with open("README.md", "r") as f:
+        return f.read()
+
+
 setup(
     name='clientlib',
+    version='0.1.0',
     author="Panagiotis Matigakis",
     author_email="pmatigakis@gmail.com",
-    description="Client library for the topicaxis services",
-    version='0.1.0',
+    description="HTTP API client framework",
+    long_description=get_long_description(),
+    long_description_content_type="text/markdown",
+    url="https://github.com/pmatigakis/clientlib",
     packages=find_packages(exclude=["tests"]),
-    zip_safe=True,
     install_requires=get_requirements(),
-    test_suite='nose.collector',
     tests_require=get_test_requirements(),
+    test_suite='nose.collector',
+    zip_safe=True,
+    classifiers=(
+        "Programming Language :: Python :: 3",
+        "License :: OSI Approved :: MIT License",
+        "Operating System :: OS Independent",
+    )
 )
