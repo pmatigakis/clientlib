@@ -7,3 +7,5 @@ cover/
 clientlib.egg-info/
 temp/
 .eggs/
+build/
+dist/
