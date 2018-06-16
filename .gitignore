@@ -6,3 +6,4 @@ temp/
 cover/
 clientlib.egg-info/
 temp/
+.eggs/
