@@ -19,7 +19,7 @@ class SampleResponseSchema(Schema):
     message = Str(required=True)
 
     @post_load
-    def make_response(self, data):
+    def make_response(self, data, **kwargs):
         return SampleResponse(**data)
 
 
@@ -27,7 +27,7 @@ class SamplePayloadSchema(Schema):
     message = Str(required=True)
 
     @post_load
-    def make_response(self, data):
+    def make_response(self, data, **kwargs):
         return SamplePayload(**data)
 
 
@@ -248,8 +248,52 @@ class EndpointTests(TestCase):
             headers={
                 "Content-Type": "application/json"
             },
+            json={}
+        )
+
+        endpoint = Endpoint(
+            method="GET",
+            endpoint="/test",
+            response_schema=SampleResponseSchema()
+        )
+        endpoint._function = function_mock
+
+        with self.assertRaises(ResponseDeserializationError) as e:
+            endpoint.execute()
+
+        self.assertIsInstance(e.exception, ResponseDeserializationError)
+        self.assertEqual(
+            e.exception.reason,
+            "failed to deserialize endpoint response"
+        )
+
+        self.assertDictEqual(
+            e.exception.errors,
+            {
+                "message": ["Missing data for required field."]
+            }
+        )
+        self.assertEqual(e.exception.response.status_code, 200)
+        self.assertDictEqual(
+            e.exception.response.headers,
+            {
+                "Content-Type": "application/json"
+            }
+        )
+        self.assertDictEqual(e.exception.response.json, {})
+
+        function_mock.execute.assert_called_once_with(
+            args={}, params={}, json=None)
+
+    def test_execute_with_response_schema_and_unknown_response_fields(self):
+        function_mock = MagicMock()
+        function_mock.execute.return_value = Response(
+            status_code=200,
+            headers={
+                "Content-Type": "application/json"
+            },
             json={
-                "something": "this is not valid response data"
+                "my-field": "this is an unknown field"
             }
         )
 
@@ -266,61 +310,13 @@ class EndpointTests(TestCase):
         self.assertIsInstance(e.exception, ResponseDeserializationError)
         self.assertEqual(
             e.exception.reason,
-            "errors exist in deserialized endpoint response"
-        )
-        self.assertDictEqual(
-            e.exception.errors,
-            {
-                "message": ["Missing data for required field."]
-            }
-        )
-        self.assertEqual(e.exception.response.status_code, 200)
-        self.assertDictEqual(
-            e.exception.response.headers,
-            {
-                "Content-Type": "application/json"
-            }
-        )
-        self.assertDictEqual(
-            e.exception.response.json,
-            {
-                "something": "this is not valid response data"
-            }
-        )
-
-        function_mock.execute.assert_called_once_with(
-            args={}, params={}, json=None)
-
-    def test_execute_with_strict_response_schema_and_invalid_response(self):
-        function_mock = MagicMock()
-        function_mock.execute.return_value = Response(
-            status_code=200,
-            headers={
-                "Content-Type": "application/json"
-            },
-            json={
-                "something": "this is not valid response data"
-            }
-        )
-
-        endpoint = Endpoint(
-            method="GET",
-            endpoint="/test",
-            response_schema=SampleResponseSchema(strict=True)
-        )
-        endpoint._function = function_mock
-
-        with self.assertRaises(ResponseDeserializationError) as e:
-            endpoint.execute()
-
-        self.assertIsInstance(e.exception, ResponseDeserializationError)
-        self.assertEqual(
-            e.exception.reason,
             "failed to deserialize endpoint response"
         )
+
         self.assertDictEqual(
             e.exception.errors,
             {
+                "my-field": ["Unknown field."],
                 "message": ["Missing data for required field."]
             }
         )
@@ -334,7 +330,7 @@ class EndpointTests(TestCase):
         self.assertDictEqual(
             e.exception.response.json,
             {
-                "something": "this is not valid response data"
+                "my-field": "this is an unknown field"
             }
         )
 

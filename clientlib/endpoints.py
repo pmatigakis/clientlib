@@ -75,16 +75,7 @@ class Endpoint(object):
                 errors=e.messages
             )
 
-        if serialized_payload.errors:
-            logger.error("errors exist in the serialized endpoint payload")
-
-            raise PayloadSerializationError(
-                reason="errors exist in the serialized endpoint payload",
-                payload=payload,
-                errors=serialized_payload.errors
-            )
-
-        return serialized_payload.data
+        return serialized_payload
 
     def _create_payload(self, kwargs):
         payload = kwargs[self._payload] if self._payload is not None else None
@@ -128,18 +119,9 @@ class Endpoint(object):
                 errors=e.messages
             ) from e
 
-        if deserialized_response.errors:
-            logger.error("errors exist in deserialized endpoint response")
-
-            raise ResponseDeserializationError(
-                reason="errors exist in deserialized endpoint response",
-                response=response,
-                errors=deserialized_response.errors
-            )
-
         return EndpointResponse(
             response=response,
-            data=deserialized_response.data
+            data=deserialized_response
         )
 
     def _create_endpoint_response(self, response):
