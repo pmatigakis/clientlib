@@ -18,7 +18,7 @@ class PostSchema(Schema):
     body = fields.Str(required=True)
 
     @post_load
-    def make_post(self, data):
+    def make_post(self, data, **kwargs):
         return Post(**data)
 
 
@@ -33,7 +33,7 @@ class CreatedPostSchema(Schema):
     body = fields.Str(required=True)
 
     @post_load
-    def make_created_post(self, data):
+    def make_created_post(self, data, **kwargs):
         return CreatedPost(**data)
 
 
