@@ -39,6 +39,7 @@ setup(
     install_requires=get_requirements(),
     tests_require=get_test_requirements(),
     test_suite='nose.collector',
+    include_package_data=True,
     zip_safe=True,
     classifiers=(
         "Programming Language :: Python :: 3",

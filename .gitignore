@@ -10,3 +10,4 @@ temp/
 build/
 dist/
 .python-version
+.tox
