@@ -26,3 +26,24 @@ class TokenAuthenticator(AuthBase):
         request.headers["Authorization"] = self._create_authorization_value()
 
         return request
+
+
+class RequestParameterAuthenticator(AuthBase):
+    """Request parameter authentication
+
+    This authenticator will put the api key in a url parameter of a request
+    """
+
+    def __init__(self, api_key, parameter_name):
+        """Create a new RequestParameterAuthenticator object
+
+        :param str api_key: the api key
+        :param str parameter_name: the name of the parameter to put the key
+        """
+        self._api_key = api_key
+        self._parameter_name = parameter_name
+
+    def __call__(self, r):
+        r.prepare_url(r.url, {self._parameter_name: self._api_key})
+
+        return r

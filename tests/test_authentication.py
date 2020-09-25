@@ -2,7 +2,9 @@ from unittest import TestCase, main
 
 from requests import Request
 
-from clientlib.authentication import TokenAuthenticator
+from clientlib.authentication import (
+    TokenAuthenticator, RequestParameterAuthenticator
+)
 
 
 class TokenAuthenticatorTests(TestCase):
@@ -34,6 +36,18 @@ class TokenAuthenticatorTests(TestCase):
                 "Authorization": "Bearer my-token"
             }
         )
+
+
+class RequestParameterAuthenticatorTests(TestCase):
+    def test_add_api_key_to_request(self):
+        request = Request(url="http://www.example.com")
+        prepared_request = request.prepare()
+
+        authenticator = RequestParameterAuthenticator("my-token", "apikey")
+        prepared_request = authenticator(prepared_request)
+
+        self.assertEqual(
+            prepared_request.url, "http://www.example.com/?apikey=my-token")
 
 
 if __name__ == "__main__":
