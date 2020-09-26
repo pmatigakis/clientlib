@@ -28,7 +28,7 @@ def get_long_description():
 
 setup(
     name='clientlib',
-    version='0.1.1',
+    version='0.2.0',
     author="Panagiotis Matigakis",
     author_email="pmatigakis@gmail.com",
     description="HTTP API client framework",
